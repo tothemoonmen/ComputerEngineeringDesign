@@ -4,27 +4,23 @@ import open3d as o3d
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Given data (current dimensions)
-current_width = 0.97151
-current_height = 0.77428
-current_depth = 0.48616
+original_width = 0.42236234
+original_height = 0.44203399
+original_depth = 0.19203022
 
-# Desired dimensions
-desired_width = 18.5
-desired_height = 8
-desired_depth = 1.5
+# Desired dimensions in meters (converted from cm)
+desired_width = 0.185
+desired_height = 0.08
+desired_depth = 0.015
+
+# Calculating scaling factors
 
 # Step 1: Calculate the scaling factors for each dimension
-scaling_factors = np.array([desired_width / current_width,
-                            desired_height / current_height,
-                            desired_depth / current_depth])
+scaling_factors = np.array([desired_width / original_width,
+                            desired_height / original_height,
+                            desired_depth / original_depth])
 # Load the point cloud
-# clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241113-11-36-01_Binary.pcd") # this is the rectangle data with scaling factor is right
-# clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241113-12-02-43_Binary.pcd") # this is the lidar box
-# clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241113-12-05-18_Binary.pcd")# Test 1
-# clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241113-13-01-59_Binary.pcd")# Test 2
-# clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241114-10-07-40_Binary.pcd") # Test 3
-clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241114-10-26-32_Binary.pcd")# Test 1 without curtain
+clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241117-14-41-26_Binary.pcd")# Test 1 without curtain Can use curtain are not just set the mesurment distance where the object is only in frame
 if clean_pcd.is_empty():
     print("The point cloud is empty.")
 
@@ -68,7 +64,7 @@ aabb = clean_pcd.get_axis_aligned_bounding_box()
 dimensions = aabb.get_extent()
 scaled_dimensions = dimensions * scaling_factors
 
-print(f"Dimensions (Width, Height, Depth): {scaled_dimensions}")
+print(f"Dimensions in meters (Width, Height, Depth): {scaled_dimensions}")
 print(f"Dimensions (Width, Height, Depth): {dimensions}")
 
 
