@@ -24,7 +24,7 @@ scaling_factors = np.array([desired_width / current_width,
 # clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241113-12-05-18_Binary.pcd")# Test 1
 # clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241113-13-01-59_Binary.pcd")# Test 2
 # clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241114-10-07-40_Binary.pcd") # Test 3
-clean_pcd = o3d.io.read_point_cloud("C:\\xt-pcds\\20241114-10-26-32_Binary.pcd")# Test 1 without curtain
+clean_pcd = o3d.io.read_point_cloud("C:\xt-pcds\20241112-09-04-37_Binary.pcd")# Test 1 without curtain
 if clean_pcd.is_empty():
     print("The point cloud is empty.")
 
