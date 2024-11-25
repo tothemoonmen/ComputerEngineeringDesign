@@ -3,6 +3,9 @@ import os
 import glob
 import open3d as o3d
 import numpy as np
+import logging
+
+
 
 from preprocess import load_and_preprocess_pcd
 from dimensions import calculate_dimensions
@@ -10,10 +13,12 @@ from orientation import determine_orientation
 from motion import is_moving
 from speed import calculate_speed_rate
 
+logging.basicConfig(level=logging.INFO)
+
 def main():
     # Get the dataset directory from user input or config
     # dataset_dir = input("Enter the path to the dataset directory: ").strip()
-    dataset_dir = "C:\\Users\\sahra\\PycharmProjects\\ComputerEngineeringDesign\\data\\rectangleHorizontal"
+    dataset_dir = "C:\\Users\\sahra\\PycharmProjects\\ComputerEngineeringDesign\\data\\Moving_PCD_Data\\Motion_PCD_Data\\Moving_a"
     # Get list of .pcd files in the directory
     pcd_files = sorted(glob.glob(os.path.join(dataset_dir, "*.pcd")))
 
@@ -28,13 +33,13 @@ def main():
     # Load and preprocess all point clouds
     pcd_sequence = []
     for file_path in pcd_files:
+        logging.info(f"Loading file: {file_path}")
         pcd = load_and_preprocess_pcd(file_path)
         if pcd is not None:
             pcd_sequence.append(pcd)
-
-    if not pcd_sequence:
-        print("No valid point clouds loaded.")
-        return
+            logging.info(f"Loaded and preprocessed {file_path}")
+        else:
+            logging.warning(f"Failed to load or preprocess {file_path}")
 
     # If only one frame, calculate dimensions and orientation
     if num_frames == 1:

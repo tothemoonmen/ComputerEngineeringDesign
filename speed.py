@@ -21,22 +21,25 @@ def compute_rotation_axis_angle(transformation):
 
     return angle_deg, rotation_axis
 
+import logging
+
 def compute_rotation_angle(pcd1, pcd2):
-    """
-    Use ICP registration to compute the transformation between pcd1 and pcd2.
-    Return the rotation angle and rotation axis.
-    """
-    threshold = 0.02  # Adjust threshold as needed
+    logging.info("Starting ICP registration between two point clouds.")
+    threshold = 0.05  # Adjust threshold as needed
     trans_init = np.identity(4)
 
-    reg_p2p = o3d.pipelines.registration.registration_icp(
-        pcd1, pcd2, threshold, trans_init,
-        o3d.pipelines.registration.TransformationEstimationPointToPoint())
+    try:
+        reg_p2p = o3d.pipelines.registration.registration_icp(
+            pcd1, pcd2, threshold, trans_init,
+            o3d.pipelines.registration.TransformationEstimationPointToPoint())
 
-    transformation = reg_p2p.transformation
+        transformation = reg_p2p.transformation
+        logging.info("ICP registration completed successfully.")
+    except Exception as e:
+        logging.error(f"ICP registration failed: {e}")
+        return 0.0, np.array([0, 0, 0])
 
     angle, rotation_axis = compute_rotation_axis_angle(transformation)
-
     return angle, rotation_axis
 
 def calculate_speed_rate(pcd_sequence, time_intervals):
