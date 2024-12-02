@@ -4,86 +4,190 @@ import glob
 import open3d as o3d
 import numpy as np
 import logging
+import re
 
-
-
+import dimensions
+import speed
+import visualization
 from preprocess import load_and_preprocess_pcd
-from dimensions import calculate_dimensions
+from dimensions import get_dem
 from orientation import determine_orientation
 from motion import is_moving
 from speed import calculate_speed_rate
 
-logging.basicConfig(level=logging.INFO)
 
 def main():
-    # Get the dataset directory from user input or config
-    # dataset_dir = input("Enter the path to the dataset directory: ").strip()
-    dataset_dir = "C:\\Users\\sahra\\PycharmProjects\\ComputerEngineeringDesign\\data\\Moving_PCD_Data\\Motion_PCD_Data\\Moving_a"
+    logging.basicConfig(level=logging.INFO)
+
+    # dataset_dir = r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\data\turningat1RPM"
+    # dim = dimensions.get_dem(r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\data\turningat1RPM\20241201-16-59-08_Binary.pcd")
+    # Define dataset directory
+
+
+    dataset_dir = r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\data\Turning2rpm"
+    dim = get_dem(r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\data\Turning2rpm\20241201-18-35-49_Binary.pcd")
+    #
+    # dataset_dir = r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\data\turning3rpm"
+    # dim = get_dem(
+    #     r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\data\turning3rpm\20241201-18-48-19_Binary.pcd")
+
+    frame_rate = 10  # frames per second (adjust if different)
     # Get list of .pcd files in the directory
-    pcd_files = sorted(glob.glob(os.path.join(dataset_dir, "*.pcd")))
+    pcd_files = sorted(
+        glob.glob(os.path.join(dataset_dir, "*.pcd")),
+        key=lambda x: int(re.search(r'\d+', os.path.basename(x)).group())
+    )
+
+    # Print sorted list for debugging
+    print(pcd_files)
 
     if not pcd_files:
         print("No .pcd files found in the directory.")
+
         return
 
-    # Determine the type of dataset based on number of frames
+    # Determine the number of frames
+
     num_frames = len(pcd_files)
-    print(f"Number of frames in the dataset: {num_frames}")
+
+    print("\n---")
+
+    print("### Data Preprocessing\n")
+
+    print(f"Number of frames in the dataset: {num_frames}\n")
 
     # Load and preprocess all point clouds
+
     pcd_sequence = []
+    counter = 0
+
     for file_path in pcd_files:
+
         logging.info(f"Loading file: {file_path}")
+
         pcd = load_and_preprocess_pcd(file_path)
+
         if pcd is not None:
+
             pcd_sequence.append(pcd)
+
             logging.info(f"Loaded and preprocessed {file_path}")
+
         else:
+
             logging.warning(f"Failed to load or preprocess {file_path}")
 
-    # If only one frame, calculate dimensions and orientation
-    if num_frames == 1:
-        pcd = pcd_sequence[0]
-        # Scaling factors can be provided or calculated
-        scaling_factors = None  # Or set to actual scaling factors if known
+    # Check if any point clouds were loaded
 
-        dimensions = calculate_dimensions(pcd, scaling_factors)
-        if dimensions is not None:
-            print(f"Dimensions (Width, Height, Depth): {dimensions}")
+    if not pcd_sequence:
+        print("No valid point clouds were loaded.")
 
-        orientation_vector = determine_orientation(pcd)
-        if orientation_vector is not None:
-            print(f"Orientation vector: {orientation_vector}")
+        return
 
-        # Determine if object is moving (with only one frame, assume not moving)
-        moving = False
-        print(f"Is object moving: {moving}")
+    # Use the first point cloud for dimension calculation
+
+    first_pcd = pcd_sequence[0]
+
+    # Calculate dimensions and orientation for the first frame
+
+    # dimensions = calculate_dimensions(first_pcd)
+
+    if dim is not None:
+
+        width, height, depth = dim
+
+        print("---")
+
+        print("### Dimension Calculation\n")
+
+        print(f"Calculated Dimensions (Width × Height × Depth): {width:.2f} cm × {height:.2f} cm × {depth:.2f} cm\n")
 
     else:
-        # Multiple frames, check if object is moving
-        moving = is_moving(pcd_sequence)
-        print(f"Is object moving: {moving}")
 
-        # Calculate speed rate if moving
-        if moving:
-            # Assume time intervals are uniform and delta_t = 1 second between frames
-            time_intervals = np.arange(num_frames)
-            speed_rate, rotation_axis = calculate_speed_rate(pcd_sequence, time_intervals)
-            print(f"Average speed rate: {speed_rate:.2f} degrees per second")
-            RPM = speed_rate / 360 * 60  # Convert to RPM
-            print(f"Estimated rotation rate: {RPM:.2f} RPM")
-            print(f"Estimated rotation axis: {rotation_axis}")
+        print("Failed to calculate dimensions.")
 
-        # For each frame, calculate dimensions and orientation (if needed)
-        for idx, pcd in enumerate(pcd_sequence):
-            print(f"\nProcessing frame {idx+1}/{num_frames}")
-            dimensions = calculate_dimensions(pcd)
-            if dimensions is not None:
-                print(f"Dimensions (Width, Height, Depth): {dimensions}")
+    orientation_vector = determine_orientation(first_pcd)
 
-            orientation_vector = determine_orientation(pcd)
-            if orientation_vector is not None:
-                print(f"Orientation vector: {orientation_vector}")
+    if orientation_vector is not None:
+
+        print("---")
+
+        print("### Orientation Determination\n")
+
+        print(
+            f"Orientation Vector: [{orientation_vector[0]:.2f}, {orientation_vector[1]:.2f}, {orientation_vector[2]:.2f}]\n")
+
+    else:
+
+        print("Failed to determine orientation.")
+
+    # Check if the object is moving
+
+    moving = is_moving(pcd_sequence)
+
+    print("---")
+
+    print("### Motion Detection\n")
+
+    print(f"Is the object moving? {'Yes' if moving else 'No'}\n")
+
+    if moving:
+        rpm = speed.calculate_rpm(pcd_sequence)
+
+        speed_rate, rotation_axis = calculate_speed_rate(pcd_sequence, rpm)
+
+        if speed_rate is not None:
+
+            print("---")
+
+            print("### Speed and Rotation Axis Calculation\n")
+
+            # print(f"Average Speed Rate: {speed_rate:.2f} degrees per second\n")
+
+            print(f"Estimated Rotation Rate: {rpm:.2f} RPM\n")
+
+            print(
+                f"Estimated Rotation Axis: [{rotation_axis[0]:.2f}, {rotation_axis[1]:.2f}, {rotation_axis[2]:.2f}]\n")
+
+        else:
+
+            print("Failed to calculate speed rate.")
+
+    else:
+
+        print("Object is not moving.")
+
+    # Optionally, predict orientation after 10 revolutions
+
+    if moving and speed_rate is not None and rotation_axis is not None:
+
+        num_revolutions = 10
+
+        total_rotation_angle = num_revolutions * 360  # degrees
+
+        if speed_rate != 0:
+
+            time_needed = total_rotation_angle / speed_rate
+
+            final_orientation_angle = (speed_rate / 360)
+
+            print("---")
+
+            print("### Orientation Prediction\n")
+
+            print(f"Time needed for {num_revolutions} revolutions: {time_needed:.2f} seconds\n")
+
+            # print(
+            #     f"Predicted Orientation after {num_revolutions} revolutions: {final_orientation_angle:.2f} degrees around axis [{rotation_axis[0]:.2f}, {rotation_axis[1]:.2f}, {rotation_axis[2]:.2f}]\n")
+
+        else:
+
+            print("Cannot predict future orientation because speed rate is zero.")
+
+    else:
+
+        print("Cannot predict future orientation without motion data.")
+
 
 if __name__ == "__main__":
     main()

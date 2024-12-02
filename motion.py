@@ -1,26 +1,56 @@
 # motion.py
 import numpy as np
+import matplotlib.pyplot as plt
+import logging
 
-def is_moving(pcd_sequence, threshold=0.01):
+def is_moving(pcd_sequence):
     """
-    Compare consecutive point clouds to see if the object has moved.
-    Return True if moving, False otherwise.
+
+    Determine if the object in the sequence is moving.
+
     """
-    if len(pcd_sequence) < 2:
+
+    try:
+
+        # Compute the max_extent across all point clouds
+
+        max_extents = []
+
+        for pcd in pcd_sequence:
+            bbox = pcd.get_axis_aligned_bounding_box()
+
+            extent = bbox.get_extent()
+
+            max_extent = np.max(extent)
+
+            max_extents.append(max_extent)
+
+        global_max_extent = np.max(max_extents)
+
+        threshold = global_max_extent * 0.001  # Adjust threshold based on extent
+
+        for i in range(1, len(pcd_sequence)):
+
+            prev_pcd = pcd_sequence[i - 1]
+
+            curr_pcd = pcd_sequence[i]
+
+            # Compute distances between point clouds
+
+            distances = prev_pcd.compute_point_cloud_distance(curr_pcd)
+
+            mean_distance = np.mean(distances)
+
+            logging.info(f"Mean distance between frame {i - 1} and {i}: {mean_distance}")
+
+            if mean_distance > threshold:
+                return True
+
         return False
 
-    for i in range(len(pcd_sequence) - 1):
-        pcd1 = pcd_sequence[i]
-        pcd2 = pcd_sequence[i+1]
-        # Compute the difference between point clouds
-        points1 = np.asarray(pcd1.points)
-        points2 = np.asarray(pcd2.points)
-        # Align point clouds if necessary (not implemented here)
-        if points1.shape == points2.shape:
-            diff = np.linalg.norm(points1 - points2, axis=1)
-            mean_diff = np.mean(diff)
-            if mean_diff > threshold:
-                return True
-        else:
-            return True  # Assume moving if shapes differ
-    return False
+    except Exception as e:
+
+        logging.error(f"Error determining motion: {e}")
+
+        return None
+
