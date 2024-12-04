@@ -187,6 +187,10 @@ def get_dem(file):
     print(f"Dimensions (Width, Height, Depth): {scaled_dimensions}")
     print(f"Dimensions (Width, Height, Depth): {dimensions}")
 
+    # Visualize the point clouds
+    o3d.visualization.draw_geometries([inlier_cloud])
+
     return scaled_dimensions
+
 
 
