@@ -56,8 +56,8 @@ def main():
         print("Object is not moving across the sequence.")
 
 
-    # visualization.visualize_pcl_file(preprocess.load_and_preprocess_pcd(r"C:\xt-pcds\20241210-14-51-24_Binary.pcd"))
-    file = r"C:\xt-pcds\20241211-09-00-22_Binary.pcd"
+    # Vizulization and dimision file
+    file = r"C:\Users\AMYES\OneDrive\Documents\GitHub\ComptuerEngineeringDesign\Project_Final_Data\20241211-09-00-22_Binary.pcd"
     pcd_input = o3d.io.read_point_cloud(file)
     get_dem(pcd_input)
     visualization.visualize_pcl_file(pcd_input)

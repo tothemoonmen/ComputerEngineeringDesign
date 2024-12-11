@@ -57,8 +57,8 @@ import preprocess
 
 
 # Step 1: Calculate the scaling factors for each dimension
-scaling_factors = np.array([12,
-                            1.57,
+scaling_factors = np.array([25,
+                            20,
                             7.5])
 
 
